@@ -25,12 +25,22 @@ char * ip = "127.0.0.1";	// default ip (local machine)
 * PlayersInfo is an 1-D array with two elements, info's of black player and infos's of white  player
 * you can see the struct in client.h
 */
-PlayerInfo* playersInfo;
+PlayerInfo** playersInfo;
 
-//Based on the infos of two players evaluate the state
+/* Based on the infos of two players evaluate the state
+*  Black player wants positive 
+*  White player wants negative
+*/
 int evaluate_function(){
+	int black_score = playersInfo[0] -> food + playersInfo[0] -> queens + playersInfo[0] -> soldiers + playersInfo[0] -> unprotected_soldiers + 
+			playersInfo[0] -> in_danger_soldiers + playersInfo[0] -> threatening_soldiers;
 
-}
+	int white_score = playersInfo[1] -> food + playersInfo[1] -> queens + playersInfo[1] -> soldiers + playersInfo[1] -> unprotected_soldiers + 
+			playersInfo[1] -> in_danger_soldiers + playersInfo[1] -> threatening_soldiers;
+
+	return black_score - white_score;
+
+}	
 
 int main( int argc, char ** argv ){
 	int c;
@@ -66,19 +76,13 @@ int main( int argc, char ** argv ){
 
 	char msg;
 
-/**********************************************************/
-// used in random
-	srand( time( NULL ) );
-	int i, j, k;
-	int jumpPossible;
-	int playerDirection;
-/**********************************************************/
+
 	/*
 	* create two players infromations
 	* playersInfo[0] is black player
 	* playersInfo[1] is white player
 	*/
-	playersInfo=(PlayerInfo*)malloc(2*sizeof(PlayerInfo));
+	playersInfo=(PlayerInfo**)malloc(2*sizeof(PlayerInfo*));
 
 	for (int l = 0; l < 2; l++){
 		playersInfo[l] -> food = 0;
@@ -149,107 +153,117 @@ int main( int argc, char ** argv ){
 		}
 
 	}
-
-	void random_move(){
-		// random player - not the most efficient implementation
-
-		if( myColor == WHITE )		// find movement's direction
-			playerDirection = 1;
-		else
-			playerDirection = -1;
-
-		jumpPossible = FALSE;		// determine if we have a jump available
-		for( i = 0; i < BOARD_ROWS; i++ ){
-			for( j = 0; j < BOARD_COLUMNS; j++ )
-			{
-				if( gamePosition.board[ i ][ j ] == myColor )
-				{
-					if( canJump( i, j, myColor, &gamePosition ) )
-						jumpPossible = TRUE;
-				}
-			}
-		}
-
-		while( 1 ){
-			i = ranminimax algorithm for a game that respects mandatory movesd() % (BOARD_ROWS);
-			j = rand() % BOARD_COLUMNS;
-
-			if( gamePosition.board[ i ][ j ] == myColor ){		//find a piece of ours
-
-				myMove.tile[ 0 ][ 0 ] = i;		//piece we are going to move
-				myMove.tile[ 1 ][ 0 ] = j;
-
-				if( jumpPossible == FALSE )
-				{
-					myMove.tile[ 0 ][ 1 ] = i + 1 * playerDirection;
-					myMove.tile[ 0 ][ 2 ] = -1;
-					if( rand() % 2 == 0 )	//with 50% chance try left and then right
-					{
-						myMove.tile[ 1 ][ 1 ] = j - 1;
-						if( isLegal( &gamePosition, &myMove ))
-							break;
-
-						myMove.tile[ 1 ][ 1 ] = j + 1;
-						if( isLegal( &gamePosition, &myMove ))
-							break;
-					}
-					else	//the other 50%...try right first and then left
-					{
-						myMove.tile[ 1 ][ 1 ] = j + 1;
-						if( isLegal( &gamePosition, &myMove ))
-							break;
-
-						myMove.tile[ 1 ][ 1 ] = j - 1;
-						if( isLegal( &gamePosition, &myMove ))
-							break;
-					}
-				}
-				else	//jump possible
-				{
-					if( canJump( i, j, myColor, &gamePosition ) ){
-						k = 1;
-						while( canJump( i, j, myColor, &gamePosition ) != 0 )
-						{
-							myMove.tile[ 0 ][ k ] = i + 2 * playerDirection;
-							if( rand() % 2 == 0 )	//50% chance
-							{
-
-								if( canJump( i, j, myColor, &gamePosition ) % 2 == 1 )		//left jump possible
-									myMove.tile[ 1 ][ k ] = j - 2;
-								else
-									myMove.tile[ 1 ][ k ] = j + 2;
-
-							}
-							else	//50%
-							{
-
-								if( canJump( i, j, myColor, &gamePosition ) > 1 )		//right jump possible
-									myMove.tile[ 1 ][ k ] = j + 2;
-								else
-									myMove.tile[ 1 ][ k ] = j - 2;
-
-							}
-
-							if( k + 1 == MAXIMUM_MOVE_SIZE )	//maximum tiles reached
-								break;
-
-							myMove.tile[ 0 ][ k + 1 ] = -1;		//maximum tiles not reached
-
-							i = myMove.tile[ 0 ][ k ];		//we will try to jump from this point in the next loop
-							j = myMove.tile[ 1 ][ k ];
-
-
-							k++;
-						}
-						break;
-					}
-				}
-			}
-
-		}
-	} 
+ 
 
 	return 0;
+}
+
+/**********************************************************/	
+	int i, j, k;
+	int jumpPossible;
+	int playerDirection;
+/**********************************************************/
+
+
+void random_move(){
+	// used in random
+	srand( time( NULL ) );
+	// random player - not the most efficient implementation
+
+	if( myColor == WHITE )		// find movement's direction
+		playerDirection = 1;
+	else
+		playerDirection = -1;
+
+	jumpPossible = FALSE;		// determine if we have a jump available
+	for( i = 0; i < BOARD_ROWS; i++ ){
+		for( j = 0; j < BOARD_COLUMNS; j++ )
+		{
+			if( gamePosition.board[ i ][ j ] == myColor )
+			{
+				if( canJump( i, j, myColor, &gamePosition ) )
+					jumpPossible = TRUE;
+			}
+		}
+	}
+
+	while( 1 ){
+		i = rand() % (BOARD_ROWS);
+		j = rand() % BOARD_COLUMNS;
+
+		if( gamePosition.board[ i ][ j ] == myColor ){		//find a piece of ours
+
+			myMove.tile[ 0 ][ 0 ] = i;		//piece we are going to move
+			myMove.tile[ 1 ][ 0 ] = j;
+
+			if( jumpPossible == FALSE )
+			{
+				myMove.tile[ 0 ][ 1 ] = i + 1 * playerDirection;
+				myMove.tile[ 0 ][ 2 ] = -1;
+				if( rand() % 2 == 0 )	//with 50% chance try left and then right
+				{
+					myMove.tile[ 1 ][ 1 ] = j - 1;
+					if( isLegal( &gamePosition, &myMove ))
+						break;
+
+					myMove.tile[ 1 ][ 1 ] = j + 1;
+					if( isLegal( &gamePosition, &myMove ))
+						break;
+				}
+				else	//the other 50%...try right first and then left
+				{
+					myMove.tile[ 1 ][ 1 ] = j + 1;
+					if( isLegal( &gamePosition, &myMove ))
+						break;
+
+					myMove.tile[ 1 ][ 1 ] = j - 1;
+					if( isLegal( &gamePosition, &myMove ))
+						break;
+				}
+			}
+			else	//jump possible
+			{
+				if( canJump( i, j, myColor, &gamePosition ) ){
+					k = 1;
+					while( canJump( i, j, myColor, &gamePosition ) != 0 )
+					{
+						myMove.tile[ 0 ][ k ] = i + 2 * playerDirection;
+						if( rand() % 2 == 0 )	//50% chance
+						{
+
+							if( canJump( i, j, myColor, &gamePosition ) % 2 == 1 )		//left jump possible
+								myMove.tile[ 1 ][ k ] = j - 2;
+							else
+								myMove.tile[ 1 ][ k ] = j + 2;
+
+						}
+						else	//50%
+						{
+
+							if( canJump( i, j, myColor, &gamePosition ) > 1 )		//right jump possible
+								myMove.tile[ 1 ][ k ] = j + 2;
+							else
+								myMove.tile[ 1 ][ k ] = j - 2;
+
+						}
+
+						if( k + 1 == MAXIMUM_MOVE_SIZE )	//maximum tiles reached
+							break;
+
+						myMove.tile[ 0 ][ k + 1 ] = -1;		//maximum tiles not reached
+
+						i = myMove.tile[ 0 ][ k ];		//we will try to jump from this point in the next loop
+						j = myMove.tile[ 1 ][ k ];
+
+
+						k++;
+					}
+					break;
+				}
+			}
+		}
+
+	}
 }
 
 
