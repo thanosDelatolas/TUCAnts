@@ -7,6 +7,18 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include "mlist.h"
+
+int max(int a, int b){
+	if (a > b)
+		return a;
+	return b;
+}
+int min(int a, int b){
+	if(a < b)
+		return a;
+	return b;
+}
 
 /**********************************************************/
 Position gamePosition;		// Position we are going to use
@@ -20,27 +32,7 @@ int mySocket;				// our socket
 char * agentName = "DEVOU_AGENT!";
 
 char * ip = "127.0.0.1";	// default ip (local machine)
-/**********************************************************/
-/**
-* PlayersInfo is an 1-D array with two elements, info's of black player and infos's of white  player
-* you can see the struct in client.h
-*/
-PlayerInfo** playersInfo;
 
-/* Based on the infos of two players evaluate the state
-*  Black player wants positive 
-*  White player wants negative
-*/
-int evaluate_function(){
-	int black_score = playersInfo[0] -> food + playersInfo[0] -> queens + playersInfo[0] -> soldiers + playersInfo[0] -> unprotected_soldiers + 
-			playersInfo[0] -> in_danger_soldiers + playersInfo[0] -> threatening_soldiers;
-
-	int white_score = playersInfo[1] -> food + playersInfo[1] -> queens + playersInfo[1] -> soldiers + playersInfo[1] -> unprotected_soldiers + 
-			playersInfo[1] -> in_danger_soldiers + playersInfo[1] -> threatening_soldiers;
-
-	return black_score - white_score;
-
-}	
 
 int main( int argc, char ** argv ){
 	int c;
@@ -76,22 +68,6 @@ int main( int argc, char ** argv ){
 
 	char msg;
 
-
-	/*
-	* create two players infromations
-	* playersInfo[0] is black player
-	* playersInfo[1] is white player
-	*/
-	playersInfo=(PlayerInfo**)malloc(2*sizeof(PlayerInfo*));
-
-	for (int l = 0; l < 2; l++){
-		playersInfo[l] -> food = 0;
-		playersInfo[l] -> queens = 0;
-		playersInfo[l] -> soldiers = 12;
-		playersInfo[l] -> unprotected_soldiers = 0;
-		playersInfo[l] -> in_danger_soldiers = 0;
-		playersInfo[l] -> threatening_soldiers = 0;
-	}
 
 	while( 1 )
 	{
@@ -156,6 +132,86 @@ int main( int argc, char ** argv ){
  
 
 	return 0;
+}
+
+Move* make_move(Position* pos, int depth){
+
+	
+	Move* agent_move = malloc(sizeof(Move));
+
+	Position* temp_pos = malloc(sizeof(Position));
+	memcpy(temp_pos, pos, sizeof(Position));
+
+	iterativeDeepening(temp_pos, agent_move);
+
+	free(temp_pos);
+	
+	return agent_move;
+}
+
+/****white player wants to maximaze and black player wants to minimaze
+*
+* gain 100 points for each ant that you own
+* gain points for the depth (in board ) of each ant 
+*
+* lose 100 points for each ant that the opponent own
+* lose points for the depth (in board ) of each opponent's ant
+*
+* pos -> score*90 because score has queens and food
+*/
+int evaluate_function(Position* pos){
+	int i,j, heuristic = 0;
+    
+	for (i = 0; i < BOARD_ROWS; i++){
+    	for ( j = 0; j < BOARD_COLUMNS; j++){
+            if (pos -> board[i][j] == myColor){
+            	//for each cell that i own, gain 100 points! 
+            	heuristic += 100;
+            	//add points for the depth of the cell 
+           		if(myColor == WHITE)
+           			heuristic += i;
+           		else
+      				heuristic += (BOARD_ROWS-i-1);
+
+           	}
+            else if (pos -> board[i][j] == getOtherSide(myColor)){
+            	//for each cell that i own, gain 100 points!
+       			heuristic -= 100;
+            	//add points for the depth of the cell 
+           		if(myColor == BLACK)
+           			heuristic -= i;
+           		else
+           			heuristic -= (BOARD_ROWS-i-1);
+           	}
+
+        }
+    }
+    //scores of each player *90 beacause score is important!
+    return heuristic + pos -> score[myColor]*90 - pos -> score[getOtherSide(myColor)]*90;
+
+}
+/*
+*It is an extension of the evaluation function to defer evaluation until the position is stable enough to be evaluated
+* enough to be evaluated means no jump available
+*/
+int quiescence_search(Position* pos){
+		int i, j;
+		for( i = 0; i < BOARD_ROWS; i++ ){
+			for( j = 0; j < BOARD_COLUMNS; j++ ){
+				if( pos->board[ i ][ j ] == pos->turn ){
+					if( canJump( i, j, pos->turn, pos )){
+						return TRUE;
+					}
+				}
+			}
+		}
+		return FALSE;
+
+
+}
+
+int iterativeDeepening(Position* pos, Move* agent_move){
+	return -1;
 }
 
 /**********************************************************/	
