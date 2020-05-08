@@ -8,7 +8,7 @@
 * Iterative Deepening
 */
 
-//player that does random moves!
+//player that does random moves
 void random_move();
 
 /****white player wants to maximaze and black player wants to minimaze
@@ -26,8 +26,10 @@ int evaluate_function(Position* pos);
 /*
 *It is an extension of the evaluation function to defer evaluation until the position is stable enough to be evaluated
 * enough to be evaluated means no jump available
+*
+* evaluate_function works better because none of the ants is threatened!
 */
-int quiescence_search(Position* pos)
+int quiescence_search(Position* pos);
 
 /*** Main function of the agent
 *

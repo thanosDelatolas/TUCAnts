@@ -193,21 +193,21 @@ int evaluate_function(Position* pos){
 /*
 *It is an extension of the evaluation function to defer evaluation until the position is stable enough to be evaluated
 * enough to be evaluated means no jump available
+*
+* evaluate_function works better because none of the ants is threatened!
 */
 int quiescence_search(Position* pos){
-		int i, j;
-		for( i = 0; i < BOARD_ROWS; i++ ){
-			for( j = 0; j < BOARD_COLUMNS; j++ ){
-				if( pos->board[ i ][ j ] == pos->turn ){
-					if( canJump( i, j, pos->turn, pos )){
-						return TRUE;
-					}
+	int i, j;
+	for( i = 0; i < BOARD_ROWS; i++ ){
+		for( j = 0; j < BOARD_COLUMNS; j++ ){
+			if( pos->board[ i ][ j ] == pos->turn ){
+				if( canJump( i, j, pos->turn, pos )){
+					return TRUE;
 				}
 			}
 		}
-		return FALSE;
-
-
+	}
+	return FALSE;
 }
 
 int iterativeDeepening(Position* pos, Move* agent_move){
