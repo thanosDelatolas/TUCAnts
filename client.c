@@ -32,7 +32,7 @@ Move myMove;				// move to save our choice and send it to the server
 char myColor;				// to store our color
 int mySocket;				// our socket
 
-char * agentName = "DEVOU_AGENT!";
+char * agentName = "DeVou!";
 
 char * ip = "127.0.0.1";	// default ip (local machine)
 
@@ -115,8 +115,9 @@ int main( int argc, char ** argv ){
 				}
 				else{
 
-					random_move();
-
+					Move *tempMove = make_move(&gamePosition, 3);
+					myMove = *tempMove;
+					free(tempMove);
 				}
 
 				sendMove( &myMove, mySocket );			//send our move
@@ -144,9 +145,8 @@ Move* make_move(Position* pos, int depth){
 
 	Position* temp_pos = malloc(sizeof(Position));
 	memcpy(temp_pos, pos, sizeof(Position));
-
-	iterativeDeepening(temp_pos, agent_move);
-
+	mini_max(temp_pos,depth,TRUE,agent_move);
+	
 	free(temp_pos);
 	
 	return agent_move;
@@ -154,12 +154,54 @@ Move* make_move(Position* pos, int depth){
 
 int mini_max(Position* pos, int depth, int maximizingPlayer, Move* finalMove){
 
+	//go down until we are in a stable position
 	if(depth <=0  && quiescence_search(pos) == TRUE)
 		return evaluate_function(pos);
 
-	if(maximizingPlayer == 1){
-		int value = INT_MIN;
-	} 
+	Move* child;
+
+	Position* tempPosition = malloc(sizeof(Position));
+	
+
+	list* children;
+
+	int value;
+
+	if(maximizingPlayer == TRUE){
+		value = INT_MIN;
+		children = find_moves(pos);
+		printList(children);
+
+		while(((child = pop(children)) != NULL)){
+			memcpy(tempPosition, pos, sizeof(Position));
+			doMove(tempPosition, child);
+			value = max(value,mini_max(tempPosition, depth -1 , FALSE, NULL));
+
+			//move	
+			if (finalMove != NULL)
+				memcpy(finalMove, child, sizeof(Move));
+		}
+
+	}
+	else{
+		value = INT_MAX;
+		list* children = find_moves(pos);
+		printList(children);
+
+		while(((child = pop(children)) != NULL)){
+			memcpy(tempPosition, pos, sizeof(Position));
+			doMove(tempPosition, child);
+			value = min(value,mini_max(tempPosition, depth -1 , TRUE, NULL));
+
+		}
+
+	}
+	
+
+
+	free(children);
+	free(tempPosition); 
+	return value;
 
 }
 
@@ -200,8 +242,11 @@ int evaluate_function(Position* pos){
 
         }
     }
+    int x = heuristic + pos -> score[myColor]*90 - pos -> score[getOtherSide(myColor)]*90;
+
+    printf("Heuristic: %d\n",x );
     //scores of each player *90 beacause score is important!
-    return heuristic + pos -> score[myColor]*90 - pos -> score[getOtherSide(myColor)]*90;
+    return x;
 
 }
 /*
@@ -216,12 +261,12 @@ int quiescence_search(Position* pos){
 		for( j = 0; j < BOARD_COLUMNS; j++ ){
 			if( pos->board[ i ][ j ] == pos->turn ){
 				if( canJump( i, j, pos->turn, pos )){
-					return TRUE;
+					return FALSE;
 				}
 			}
 		}
 	}
-	return FALSE;
+	return TRUE;
 }
 
 int iterativeDeepening(Position* pos, Move* agent_move){
@@ -392,7 +437,7 @@ void random_move(){
 	// used in random
 	srand( time( NULL ) );
 	// random player - not the most efficient implementation
-	printf("hii\n");
+	
 	if( myColor == WHITE )		// find movement's direction
 		playerDirection = 1;
 	else
