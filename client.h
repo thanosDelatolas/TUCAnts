@@ -1,3 +1,4 @@
+#include "list.h"
 /** Implemented technics:
 *
 * minimax
@@ -37,3 +38,11 @@ int quiescence_search(Position* pos);
 Move* make_move(Position* pos, int depth);
 
 int iterativeDeepening(Position* pos, Move* agent_move);
+
+//returns a list with all possible moves from a position
+list* find_moves(Position *aPosition);
+
+void follow_jump(list* moveList, Move* move, int k /* depth of recursion*/,char i, char j, Position *aPosition);
+
+//similar to canJump(board.h) but for moves
+int dirMoveFrom ( char row, char col, char player, Position *pos);

@@ -7,7 +7,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-#include "mlist.h"
+#include "list.h"
+#include <string.h>
+#include <limits.h>
+
 
 int max(int a, int b){
 	if (a > b)
@@ -149,6 +152,17 @@ Move* make_move(Position* pos, int depth){
 	return agent_move;
 }
 
+int mini_max(Position* pos, int depth, int maximizingPlayer, Move* finalMove){
+
+	if(depth <=0  && quiescence_search(pos) == TRUE)
+		return evaluate_function(pos);
+
+	if(maximizingPlayer == 1){
+		int value = INT_MIN;
+	} 
+
+}
+
 /****white player wants to maximaze and black player wants to minimaze
 *
 * gain 100 points for each ant that you own
@@ -214,6 +228,159 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 	return -1;
 }
 
+list* find_moves(Position *aPosition){
+	int i, j, jumpPossible = FALSE, movePossible = FALSE, playerDirection;
+	list* moveList = malloc(sizeof(list));
+
+	initList(moveList);
+
+	Move *move;
+
+	char curColor = aPosition->turn;
+
+	if( curColor == WHITE )		// find movement's direction
+		playerDirection = 1;
+	else
+		playerDirection = -1;
+
+	for( i = 0; i < BOARD_ROWS; i++ ){
+		for( j = 0; j < BOARD_COLUMNS; j++){
+			if( aPosition->board[ i ][ j ] == curColor ){
+				if( canJump( i, j, curColor, aPosition ) ){
+					if(!jumpPossible)
+						emptyList(moveList); //any simple moves are deleted
+					move = malloc(sizeof(Move));
+					move->color = curColor;
+					follow_jump(moveList, move, 0, i, j, aPosition); 
+					jumpPossible = TRUE;
+				}
+				if((jumpPossible == FALSE) && (movePossible = dirMoveFrom ( i, j, curColor, aPosition))){
+					if(movePossible % 2 == 1){ //left move possible	
+						move = malloc(sizeof(Move));
+						move->color = aPosition->turn;
+						move->tile[0][0] = i;
+						move->tile[1][0] = j;
+						move->tile[0][1] = i + playerDirection;
+						move->tile[1][1] = j-1;
+						move->tile[0][2] = -1;
+						if(isLegal(aPosition, move)){
+							push(moveList, move);}
+						else
+							free(move);
+					}
+					if(movePossible > 1){
+						move = malloc(sizeof(Move));
+						move->color = aPosition->turn;
+						move->tile[0][0] = i;
+						move->tile[1][0] = j;
+						move->tile[0][1] = i + playerDirection;
+						move->tile[1][1] = j+1;
+						move->tile[0][2] = -1;
+						if(isLegal(aPosition, move)){
+							push(moveList, move);}
+						else
+							free(move);
+					}
+
+				}
+
+			}
+		}
+	}
+
+	if(top(moveList)==NULL){ //if we can't move
+		move = malloc(sizeof(Move));
+		move->color = curColor;
+		move->tile[0][0] = -1;
+		push(moveList, move);
+	}
+
+	return moveList;
+
+} 
+
+void follow_jump(list* moveList, Move* move, int k /* depth of recursion*/,char i, char j, Position *aPosition){
+	
+	int possibleJumps, playerDirection;
+	char color = move->color;
+	move->tile[0][k] = i;
+	move->tile[1][k] = j;
+
+	if(!(possibleJumps = canJump(i, j, color, aPosition))){
+		move->tile[0][k+1] = -1;
+
+		if(isLegal(aPosition, move))
+			push(moveList, move);
+		else
+			free(move);
+		return;
+	}
+
+	if( color == WHITE )		// find movement's direction
+		playerDirection = 1;
+	else
+		playerDirection = -1;
+
+
+	if(possibleJumps == 1) //can jump left
+		follow_jump(moveList, move, k+1, i + 2*playerDirection, j-2, aPosition);
+
+
+	if(possibleJumps == 2) //can jump right
+		follow_jump(moveList, move, k+1, i + 2*playerDirection, j+2, aPosition);
+
+	if(possibleJumps == 3){ //we need to split the jumps
+		//copying move:
+		Move * newMove = malloc(sizeof(Move));
+		memcpy(newMove, move, sizeof(Move));
+		//following both left and right
+		follow_jump(moveList, move, k+1, i + 2*playerDirection, j-2, aPosition);
+		follow_jump(moveList, newMove, k+1, i + 2*playerDirection, j+2, aPosition);
+
+	}
+	
+}
+
+int dirMoveFrom( char row, char col, char player, Position* pos ) {
+	int ret = 0;
+	
+	if(player == WHITE){	
+		if( row + 1 < BOARD_ROWS){
+			if( col - 1 >= 0 ){
+				if( (pos->board[ row + 1][ col - 1] == EMPTY)  || ( pos->board[ row + 1][ col - 1] == RTILE)){
+					ret = ret + 1;	//left move possible
+				}
+			}
+
+			if( col + 1 < BOARD_COLUMNS ){
+				if( (pos->board[ row + 1][ col + 1] == EMPTY)  || ( pos->board[ row + 1][ col + 1] == RTILE)){
+					ret = ret + 2;	//right move possible
+				}
+			}
+
+		}
+	}
+	else{ //black player
+		if( row - 1 >= 0 ){
+			if( col - 1 >= 0 ){
+				if( (pos->board[ row - 1][ col - 1] == EMPTY) ||(pos->board[ row - 1][ col - 1] == RTILE)){
+					ret = ret + 1;	//left move possible
+				}
+			}
+
+			if( col + 1 < BOARD_COLUMNS ){
+				if( (pos->board[ row - 1][ col + 1] == EMPTY) || (pos->board[ row - 1][ col + 1] == RTILE)) {
+					ret = ret + 2;	//right move possible
+				}
+			}
+
+		}
+	}
+
+	return ret;
+
+}
+
 /**********************************************************/	
 	int i, j, k;
 	int jumpPossible;
@@ -225,7 +392,7 @@ void random_move(){
 	// used in random
 	srand( time( NULL ) );
 	// random player - not the most efficient implementation
-
+	printf("hii\n");
 	if( myColor == WHITE )		// find movement's direction
 		playerDirection = 1;
 	else
