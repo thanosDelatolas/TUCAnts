@@ -182,4 +182,25 @@ void saveLower(Position* pos, int lowerBound, int depth){
 
 HashEntry* retrieve(Position* pos){
 
+	uint64_t zobrist_key = zobrist_hash(pos);
+	unsigned int hash = hashCode(zobrist_key);
+
+	int i=0;
+
+	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+
+		//we have saved this position
+		if(hashTable[hash].zobrist == zobrist_key)
+			return &hashTable[hash];
+		i++;
+		hash++;
+
+		//wrap arround table
+		hash = hash % TABLE_SIZE;
+	}
+
+	return NULL;
+
+
+
 }
