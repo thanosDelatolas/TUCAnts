@@ -46,16 +46,140 @@ uint64_t zobrist_hash(Position* pos){
 	return h;
 }
 
-
-
 void init_hash_table(){
-	hashTable = (DataItem*)malloc(sizeof(DataItem)*TABLE_SIZE);
+	hashTable = (HashEntry*)malloc(sizeof(HashEntry)*TABLE_SIZE);
 	if(hashTable == NULL){
 		printf("Please reduce TABLE_SIZE in transositionTable.h\n");
 		exit(0);
 	}
+
+	for (int i = 0; i < TABLE_SIZE; ++i){
+		hashTable[i].flag = NONE;
+	}
+	overwrites = 0;
 }
 
 void freeTable(){
 	free(hashTable);
+}
+
+unsigned int hashCode(uint64_t key){
+	return key % TABLE_SIZE;
+}
+
+void saveExact(Position* pos, int upperBound, int lowerBound, int depth){
+	uint64_t key = zobrist_hash(pos);
+
+	unsigned int hash = hashCode(key);
+
+	
+
+	int i=0;
+
+	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+		i++;
+		hash++;
+
+		//wrap arround table
+		hash = hash % TABLE_SIZE;
+	}
+
+	//check if we have to overwrite...
+	if(hashTable[hash].flag != NONE){
+		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
+			return;
+		//overwrite
+		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
+			overwrites++;
+		}
+
+	}
+
+	hashTable[hash].zobrist = key;
+	hashTable[hash].upperBound = upperBound;
+	hashTable[hash].lowerBound = lowerBound;
+	hashTable[hash].depth = depth;
+	hashTable[hash].flag = EXACT;
+	
+	
+}
+
+void saveUpper(Position* pos, int upperBound, int depth){
+	uint64_t key = zobrist_hash(pos);
+
+	unsigned int hash = hashCode(key);
+
+	
+
+	int i=0;
+
+	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+		i++;
+		hash++;
+
+		//wrap arround table
+		hash = hash % TABLE_SIZE;
+	}
+
+	//check if we have to overwrite...
+	if(hashTable[hash].flag != NONE){
+		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
+			return;
+		//overwrite
+		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
+			overwrites++;
+		}
+
+	}
+
+	hashTable[hash].zobrist = key;
+	hashTable[hash].upperBound = upperBound;
+	hashTable[hash].lowerBound = -1;
+	hashTable[hash].depth = depth;
+	hashTable[hash].flag = UPPER_BOUND;
+	
+	
+}
+
+
+void saveLower(Position* pos, int lowerBound, int depth){
+	uint64_t key = zobrist_hash(pos);
+
+	unsigned int hash = hashCode(key);
+
+	
+
+	int i=0;
+
+	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+		i++;
+		hash++;
+
+		//wrap arround table
+		hash = hash % TABLE_SIZE;
+	}
+
+	//check if we have to overwrite...
+	if(hashTable[hash].flag != NONE){
+		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
+			return;
+		//overwrite
+		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
+			overwrites++;
+		}
+
+	}
+
+	hashTable[hash].zobrist = key;
+	hashTable[hash].upperBound = -1;
+	hashTable[hash].lowerBound = lowerBound;
+	hashTable[hash].depth = depth;
+	hashTable[hash].flag = LOWER_BOUND;
+	
+	
+}
+
+
+HashEntry* retrieve(Position* pos){
+
 }

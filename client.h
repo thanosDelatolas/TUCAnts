@@ -12,7 +12,7 @@
 //player that does random moves
 void random_move();
 
-/****white player wants to maximaze and black player wants to minimaze
+/****white player wants to minimaze and black player wants to maximazi
 *
 * gain 100 points for each ant that you own
 * gain points for the depth (in board ) of each ant 

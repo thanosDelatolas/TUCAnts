@@ -115,7 +115,7 @@ int main( int argc, char ** argv ){
 				}
 				else{
 
-					Move *tempMove = make_move(&gamePosition, 3);
+					Move *tempMove = make_move(&gamePosition, 6);
 					myMove = *tempMove;
 					free(tempMove);
 				}
@@ -145,14 +145,14 @@ Move* make_move(Position* pos, int depth){
 
 	Position* temp_pos = malloc(sizeof(Position));
 	memcpy(temp_pos, pos, sizeof(Position));
-	mini_max(temp_pos,depth,TRUE,agent_move);
+	alpha_beta(temp_pos, depth, TRUE, INT_MIN, INT_MAX, agent_move);
 	
 	free(temp_pos);
 	
 	return agent_move;
 }
 
-int mini_max(Position* pos, int depth, int maximizingPlayer, Move* finalMove){
+int alpha_beta(Position* pos, int depth, int maximizingPlayer, int alpha, int beta, Move* finalMove){
 
 	//go down until we are in a stable position
 	if(depth <=0  && quiescence_search(pos) == TRUE)
@@ -163,49 +163,57 @@ int mini_max(Position* pos, int depth, int maximizingPlayer, Move* finalMove){
 	Position* tempPosition = malloc(sizeof(Position));
 	
 
-	list* children;
-
 	int value;
+
+	list* children = find_moves(pos);
+
+	//if we cant move..
+	if(top(children) == NULL)
+		return evaluate_function(pos);
 
 	if(maximizingPlayer == TRUE){
 		value = INT_MIN;
-		children = find_moves(pos);
-		printList(children);
-
+		printf("%d\n", pos -> turn );
 		while(((child = pop(children)) != NULL)){
 			memcpy(tempPosition, pos, sizeof(Position));
 			doMove(tempPosition, child);
-			value = max(value,mini_max(tempPosition, depth -1 , FALSE, NULL));
-
+			
+			value = max(value, alpha_beta(tempPosition, depth -1 , FALSE, alpha, beta, NULL));
+			alpha = max(value, alpha);
 			//move	
 			if (finalMove != NULL)
 				memcpy(finalMove, child, sizeof(Move));
+
+			if(alpha >= beta)
+				break;
 		}
 
 	}
+
 	else{
 		value = INT_MAX;
-		list* children = find_moves(pos);
-		printList(children);
-
+		printf("%d\n", pos -> turn );
 		while(((child = pop(children)) != NULL)){
 			memcpy(tempPosition, pos, sizeof(Position));
 			doMove(tempPosition, child);
-			value = min(value,mini_max(tempPosition, depth -1 , TRUE, NULL));
+
+			value = min(value, alpha_beta(tempPosition, depth -1 , TRUE, alpha, beta, NULL));
+			beta  = min(value, beta);
+
+			if(alpha >= beta)
+				break;
 
 		}
 
 	}
 	
-
-
 	free(children);
 	free(tempPosition); 
 	return value;
 
 }
 
-/****white player wants to maximaze and black player wants to minimaze
+/****white player wants to minimaze and black player wants to maximaze
 *
 * gain 100 points for each ant that you own
 * gain points for the depth (in board ) of each ant 
@@ -242,11 +250,13 @@ int evaluate_function(Position* pos){
 
         }
     }
+    
     int x = heuristic + pos -> score[myColor]*90 - pos -> score[getOtherSide(myColor)]*90;
 
-    printf("Heuristic: %d\n",x );
+    if( pos -> turn == WHITE)
+    	return -x;
     //scores of each player *90 beacause score is important!
-    return x;
+    return  x;
 
 }
 /*

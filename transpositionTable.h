@@ -3,8 +3,10 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <time.h>
+#include <stdlib.h>
 
 #define TABLE_SIZE 87000000
+#define OPEN_ADDRESSING 1000
 
 //returns a random 64 bit number
 uint64_t get64rand(); 
@@ -15,12 +17,19 @@ uint64_t get64rand();
 */
 void init_zobrist();
 
+enum transp_flag {EXACT,UPPER_BOUND,LOWER_BOUND, NONE};
+
 typedef struct{
+	//TUCAnts positi,on in zobritst
+	uint64_t zobrist;
+
+	int upperBound;
+	int lowerBound;
+	int depth;
+
+	enum transp_flag flag; 
 	
-	uint64_t zobrist_key;
-	int value;
-	
-}DataItem;
+}HashEntry;
 
 /*
 * array for each combination of a piece and a position 
@@ -37,10 +46,16 @@ uint64_t zobrist_table[BOARD_COLUMNS*BOARD_ROWS][2]; //white and black
 uint64_t zobrist_hash(Position *);
 
 
-DataItem* hashTable;
+HashEntry* hashTable;
+int overwrites;
 
 void init_hash_table();
 void freeTable();
 
 
+void saveExact(Position* pos, int upperBound, int lowerBound, int depth);
+void saveUpper(Position* pos, int upperBound, int depth);
+void saveLower(Position* pos, int lowerBound, int depth); 
+HashEntry* retrieve(Position* pos);
 
+unsigned int hashCode(uint64_t key);
