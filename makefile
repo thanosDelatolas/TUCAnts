@@ -20,7 +20,8 @@ gameServer: gameServer.c gameServer.h board.h move.h global.h
 
 list: list.c list.h move.h
 	gcc -c -g3 list.c -O3
+	
 transpositionTable: transpositionTable.c transpositionTable.h move.h board.h
-	gcc -c -g3 transpositionTable.c -O3
+	gcc -c transpositionTable.c -O3
 clean:
 	rm -f *.o client server

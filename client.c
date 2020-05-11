@@ -10,6 +10,11 @@
 #include "list.h"
 #include <string.h>
 #include <limits.h>
+#include "transpositionTable.h"
+
+
+
+#define MAX_DEPTH 20
 
 
 int max(int a, int b){
@@ -71,7 +76,10 @@ int main( int argc, char ** argv ){
 
 	char msg;
 
-
+	//init zobrist table
+	init_zobrist();
+	//init transposition table
+	init_hash_table();
 	while( 1 )
 	{
 
