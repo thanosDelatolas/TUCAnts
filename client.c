@@ -273,7 +273,7 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 	
 
 	if (depth <= 0){ //if we reached the maximum depth of our recursion
-		if(!quiescence_search(pos)){ // and there are no captures we can see
+		if(!quiescence_search(pos)){ // and there are no captures
 			return evaluate_function(pos); //return heuristic
 		}
 		
@@ -300,7 +300,7 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 
 		g = -INFINITY;
 		a = alpha;
-		while((g<beta)&&((child = pop(children)) != NULL)){
+		while( g<beta && ((child = pop(children)) != NULL)){
 
 
 			memcpy(tempPosition, pos, sizeof(Position));
@@ -323,7 +323,7 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 	else{
 		g = INFINITY;
 		b = beta;
-		while((g>alpha)&&(child = pop(children)) != NULL){ //for each child position
+		while( g>alpha && (child = pop(children)) != NULL){ //for each child position
 
 			memcpy(tempPosition, pos, sizeof(Position));
 			doMove(tempPosition, child);
@@ -342,11 +342,9 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 	free(tempPosition);
 	
 	if(g <= alpha){
-		//printf("hii 1\n" );
 		saveUpper(pos, g, depth);
 	}
 	if(g > alpha && g < beta){
-		//printf("hii2\n" );
 		saveExact(pos, g, g, depth);
 	}
 	if (g>= beta)

@@ -54,13 +54,7 @@ unsigned long zobrist_hash(Position* pos){
 
 
 unsigned int hahsCode(long zobrist){
-
-
-	unsigned int hash = zobrist % TABLE_SIZE;
-
-	return hash;
-
-
+	return  zobrist % TABLE_SIZE;
 }
 
 void saveExact(Position* aPos, int upperBound, int lowerBound, char depth){
@@ -69,8 +63,9 @@ void saveExact(Position* aPos, int upperBound, int lowerBound, char depth){
 	saves++;
 
 	int i=0;
-	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING))
-	{
+
+	//if it is not empty
+	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
 			i++;
 			hash++;
 
@@ -99,6 +94,8 @@ void saveUpper(Position* aPos, int upperBound,  char depth){
 	unsigned int hash = hahsCode(key);
 	int i=0;
 	saves++;
+
+	//if it is not empty
 	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
 		i++;
 		hash++;

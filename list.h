@@ -1,5 +1,3 @@
-#ifndef _LIST_H
-#define _LIST_H
 #include "move.h"
 
 typedef struct node{
@@ -23,4 +21,3 @@ Move* top(list *sList);
 void printList(list*);
 void printMove(Move *aMove);
 void emptyList(list*);
-#endif

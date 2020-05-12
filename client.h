@@ -34,6 +34,15 @@ int quiescence_search(Position* pos);
 */
 Move* make_move(Position* pos, int depth);
 
+/*
+* MTD(f) derives its efficiency by only performing zero-window alpha-beta searches, with a "good" bound (variable beta)
+* MTD(f) calls AlphaBeta a number of times, converging towards it and eventually finding the exact value. 
+* A transposition table stores and retrieves the previously searched portions of the tree in memory
+* 				to reduce the overhead of re-exploring parts of the search tree
+*/
+
+int MTDF(Position* pos, int f, char d, Move* agent_move);
+
 int iterativeDeepening(Position* pos, Move* agent_move);
 
 //returns a list with all possible moves from a position
