@@ -32,13 +32,19 @@ int quiescence_search(Position* pos);
 /*** Main function of the agent
 *
 */
-Move* make_move(Position* pos, int depth);
+Move* make_move(Position* pos);
 
 /*
 * MTD(f) derives its efficiency by only performing zero-window alpha-beta searches, with a "good" bound (variable beta)
 * MTD(f) calls AlphaBeta a number of times, converging towards it and eventually finding the exact value. 
 * A transposition table stores and retrieves the previously searched portions of the tree in memory
 * 				to reduce the overhead of re-exploring parts of the search tree
+*
+* f: First guess for best value
+* d: depth to loop for
+*
+*
+* iterative deeping will  MTDF() multiple times with incrementing d
 */
 
 int MTDF(Position* pos, int f, char d, Move* agent_move);
@@ -48,9 +54,9 @@ int iterativeDeepening(Position* pos, Move* agent_move);
 //returns a list with all possible moves from a position
 list* find_moves(Position *aPosition);
 
-void follow_jump(list* moveList, Move* move, int k /* depth of recursion*/,char i, char j, Position *aPosition);
+void follow_jump(list* moveList, Move* move, int k /* depth of recursion*/,char i, char j, Position *pos);
 
 //similar to canJump(board.h) but for moves
 int dirMoveFrom ( char row, char col, char player, Position *pos);
 
-int alpha_beta(Position *aPosition, char depth, int alpha, int beta, char maximizingPlayer, Move* finalMove);
+int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPlayer, Move* finalMove);

@@ -131,7 +131,7 @@ int main( int argc, char ** argv )
 				}
 				else
 				{
-					Move *tempMove = make_move(&gamePosition, 0/*initial depth*/);
+					Move *tempMove = make_move(&gamePosition);
 					myMove = *tempMove;
 					free(tempMove);
 				}
@@ -153,7 +153,7 @@ int main( int argc, char ** argv )
 	return 0;
 }
 
-Move* make_move(Position* pos, int depth){
+Move* make_move(Position* pos){
 
 	
 	Move* agent_move = malloc(sizeof(Move));
@@ -161,9 +161,8 @@ Move* make_move(Position* pos, int depth){
 	Position* tempPosition = malloc(sizeof(Position));
 	memcpy(tempPosition, pos, sizeof(Position));
 
-	int maxScore = -INFINITY;
-	alpha_beta(tempPosition, 9, maxScore, -maxScore, 1, agent_move);
-	
+	//alpha_beta(tempPosition, 9, -INFINITY, INFINITY, 1, agent_move);
+	iterativeDeepening(tempPosition, agent_move);
 	
 	free(tempPosition);
 	
@@ -232,7 +231,11 @@ int quiescence_search(Position* pos){
 		}
 		return FALSE;
 }
-
+/*
+* alpha_beta with memory!
+*  A transposition table stores and retrieves the previously searched portions of the tree in memory
+*  to reduce the overhead of re-exploring parts of the search tree
+*/
 int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPlayer, Move* finalMove){  
 
 	PosTransp* pos_transp = retrieve(pos);
@@ -355,6 +358,63 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 }
 
 
+int iterativeDeepening(Position* pos, Move* agent_move){
+	//first guess
+	int f = evaluate_function(pos);
+
+
+	char d=5;
+	clock_t start_clock = clock();
+	while(1)
+	{
+		f = MTDF(pos, f, d, agent_move);
+		//give max 7 seconds to find best move
+		if(((clock() - start_clock)/CLOCKS_PER_SEC > MAX_TIME) || (d > MAX_DEPTH)){
+			printf("Max Score: %d\n", f);
+			printf("Time used: %ld\n", (clock() - start_clock)/CLOCKS_PER_SEC);
+			printf("Depth of iteration: %d\n", d);
+			break;
+		}
+		d +=1;
+
+	}
+	printf("Time used: %ld\n", (clock() - start_clock)/CLOCKS_PER_SEC);
+	printf("Best Move: %d\n", f);
+
+	return f;
+}
+
+//this coded is based on wikipedia's pseudocode (https://en.wikipedia.org/wiki/MTD-f)
+int MTDF(Position* pos, int f, char d, Move* agent_move){
+	int upperBound = INFINITY;
+	int lowerBound = -INFINITY;
+
+	int b;
+	int g = f;
+
+	Move* move = (Move*)malloc(sizeof(Move));
+
+	while(lowerBound < upperBound){
+		b = max(g, lowerBound+1);
+
+		g = alpha_beta(pos, d, b-1, b, TRUE, move);
+
+		if(g < b)
+			upperBound = g;
+		else{
+			lowerBound = g;
+			memcpy(agent_move, move, sizeof(Move));
+		}
+
+	}
+
+	free(move);
+	return g;
+}
+
+
+
+//methods to find valid moves! Jumps included!
 void follow_jump(list* moveList, Move* move, int rec_depth /* depth of recursion*/,char i, char j, Position *pos){
 	
 	
@@ -479,18 +539,7 @@ list* find_moves(Position *pos) {
 }
 
 
-
-
-
-int iterativeDeepening(Position* pos, Move* finalMove)
-{
-	return -1;
-}
-
-
-
-int dirMoveFrom( char row, char col, char player, Position * pos ) 
-{
+int dirMoveFrom( char row, char col, char player, Position * pos ) {
 	int returnValue = 0;
 	assert( ( player ==  WHITE ) || ( player == BLACK ) );
 	if( player == WHITE )	//white player
