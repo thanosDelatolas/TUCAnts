@@ -1,10 +1,7 @@
 #ifndef _LIST_H
 #define _LIST_H
 #include "move.h"
-/* ^^ these are the include guards */
 
-/* Prototypes for the functions */
-/* Sums two ints */
 typedef struct node{
 	Move* data;
 	struct node *next;

@@ -1,15 +1,9 @@
 #include "board.h"
 #include "move.h"
-#include <stdint.h>
-#include <stddef.h>
-#include <time.h>
-#include <stdlib.h>
 
 #define TABLE_SIZE 87000000
 #define OPEN_ADDRESSING 1000
 
-//returns a random 64 bit number
-uint64_t get64rand(); 
 
 /*
 * Zobrist hashing starts by randomly generating bitstrings for each possible element of a board game, i.e. 
@@ -17,24 +11,11 @@ uint64_t get64rand();
 */
 void init_zobrist();
 
-enum transp_flag {EXACT,UPPER_BOUND,LOWER_BOUND, NONE};
-
-typedef struct{
-	//TUCAnts positi,on in zobritst
-	uint64_t zobrist;
-
-	int upperBound;
-	int lowerBound;
-	int depth;
-
-	enum transp_flag flag; 
-	
-}HashEntry;
-
 /*
 * array for each combination of a piece and a position 
 */
-uint64_t zobrist_table[BOARD_COLUMNS*BOARD_ROWS][2]; //white and black 
+
+long zobrist_table[BOARD_COLUMNS*BOARD_ROWS][2];
 
 
 /*
@@ -43,19 +24,52 @@ uint64_t zobrist_table[BOARD_COLUMNS*BOARD_ROWS][2]; //white and black
 *
 * If the bitstrings are long enough, different board positions will almost certainly hash to different values
 */
-uint64_t zobrist_hash(Position *);
+unsigned long zobrist_hash(Position *);
+
+/*
+* type = 0 => PosTransp is empty
+* type = 0x3 (011) => PosTransp is Lower
+* type = 0x5 (101) => PosTransp is Upper
+* type = 0x7 (111) => PosTransp is Exact
+*
+* type & 0x2 => not upper
+* type & 0x4 => not lower
+* type & 0x1 => not empty
+*
+*
+* we don't use enum to save space and time!
+* bitwise checks are way faster!
+*/
+
+typedef struct {
+	unsigned long zobrist_key;
+	int upperBound;
+	int lowerBound;
+	char upperDepth;
+	char lowerDepth;
+	char type; //determines if it's exact,upper,lower
+}PosTransp;
 
 
-HashEntry* hashTable;
-int overwrites;
 
+int hitsUpper;
+int hitsLower;
+int read_tries;
+int overWrite;
+int saves;
+
+PosTransp* pos_transp_table;
+
+
+void saveExact(Position*, int, int, char);
+void saveLower(Position*, int, char);
+void saveUpper(Position*, int, char);
+
+PosTransp* retrieve(Position*);
+
+unsigned int hashCode(long);
 void init_hash_table();
 void freeTable();
 
 
-void saveExact(Position* pos, int upperBound, int lowerBound, int depth);
-void saveUpper(Position* pos, int upperBound, int depth);
-void saveLower(Position* pos, int lowerBound, int depth); 
-HashEntry* retrieve(Position* pos);
 
-unsigned int hashCode(uint64_t key);

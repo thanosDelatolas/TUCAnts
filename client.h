@@ -9,9 +9,6 @@
 * Iterative Deepening
 */
 
-//player that does random moves
-void random_move();
-
 /****white player wants to minimaze and black player wants to maximazi
 *
 * gain 100 points for each ant that you own
@@ -46,3 +43,5 @@ void follow_jump(list* moveList, Move* move, int k /* depth of recursion*/,char 
 
 //similar to canJump(board.h) but for moves
 int dirMoveFrom ( char row, char col, char player, Position *pos);
+
+int alpha_beta(Position *aPosition, char depth, int alpha, int beta, char maximizingPlayer, Move* finalMove);

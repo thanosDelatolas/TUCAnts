@@ -1,40 +1,46 @@
 #include "transpositionTable.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
-uint64_t get64rand() {
-    return
-    (((uint64_t) rand() <<  0) & 0x000000000000FFFFull) |
-    (((uint64_t) rand() << 16) & 0x00000000FFFF0000ull) |
-    (((uint64_t) rand() << 32) & 0x0000FFFF00000000ull) |
-    (((uint64_t) rand() << 48) & 0xFFFF000000000000ull);
-}
+#define MIN(x,y) (((x) < (y)) ? (x) : (y))
 
-/*
-* Zobrist hashing starts by randomly generating bitstrings for each possible element of a board game, i.e. 
-* for each combination of a piece and a position (in the game of TUCAnts1.01, that's 2 pieces × BOARD_COLUMNS*BOARD_ROWS board positions
-*/
-void init_zobrist(){
-	// used in random
-	srand( time( NULL ) );
-	int i;
-	for (i=0; i < BOARD_COLUMNS*BOARD_ROWS; i++){
-		zobrist_table[i][0] = get64rand();
-		zobrist_table[i][1] = get64rand();
+void init_hash_table(){
+
+	pos_transp_table = malloc(sizeof(PosTransp)*(TABLE_SIZE));
+
+	if(pos_transp_table == NULL){
+		printf("Please reduce TABLE_SIZE in transpositionTable.h\n");
+		exit(0);
 	}
-	
+
+	//all empty
+	for(int i=0; i < TABLE_SIZE; i++)
+		pos_transp_table[i].type =0;
+
 }
 
-/*
-* The final Zobrist hash is computed by combining the random bitstrings using bitwise XOR with the Position
-*
-*
-* If the bitstrings are long enough, different board positions will almost certainly hash to different values
-*/
+void init_zobrist(){
+		hitsUpper =0;
+		hitsLower = 0;
+		read_tries = 1;
+		overWrite = 0;
+		saves=1;
 
-uint64_t zobrist_hash(Position* pos){
+	//generate random bit streams
+	for (int i=0; i < BOARD_COLUMNS*BOARD_ROWS; i++){
+
+		zobrist_table[i][0] = ((((long) rand() <<  0) & 0x00000000FFFFFFFFull) | (((long) rand() << 32) & 0xFFFFFFFF00000000ull));
+		zobrist_table[i][1] = ((((long) rand() <<  0) & 0x00000000FFFFFFFFull) | (((long) rand() << 32) & 0xFFFFFFFF00000000ull));
+	}
+}
+
+
+
+unsigned long zobrist_hash(Position* pos){
 	int i,j;
-	uint64_t h = 0;
+	unsigned long h = 0;
 	for (i= 0; i < BOARD_ROWS; i++){
 		for (j=0; j < BOARD_COLUMNS; j++){
 			if (pos->board[i][j] == WHITE ||pos->board[i][j] == BLACK )
@@ -46,161 +52,132 @@ uint64_t zobrist_hash(Position* pos){
 	return h;
 }
 
-void init_hash_table(){
-	hashTable = (HashEntry*)malloc(sizeof(HashEntry)*TABLE_SIZE);
-	if(hashTable == NULL){
-		printf("Please reduce TABLE_SIZE in transositionTable.h\n");
-		exit(0);
-	}
 
-	for (int i = 0; i < TABLE_SIZE; ++i){
-		hashTable[i].flag = NONE;
-	}
-	overwrites = 0;
+unsigned int hahsCode(long zobrist){
+
+
+	unsigned int hash = zobrist % TABLE_SIZE;
+
+	return hash;
+
+
 }
 
-void freeTable(){
-	free(hashTable);
-}
-
-unsigned int hashCode(uint64_t key){
-	return key % TABLE_SIZE;
-}
-
-void saveExact(Position* pos, int upperBound, int lowerBound, int depth){
-	uint64_t key = zobrist_hash(pos);
-
-	unsigned int hash = hashCode(key);
-
-	
+void saveExact(Position* aPos, int upperBound, int lowerBound, char depth){
+	unsigned long key = zobrist_hash(aPos);
+	unsigned int hash = hahsCode(key);
+	saves++;
 
 	int i=0;
+	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING))
+	{
+			i++;
+			hash++;
 
-	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+			//wrap around the table
+			hash = hash % TABLE_SIZE;
+	}
+	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
+		overWrite++;
+
+	if(((pos_transp_table[hash].type = 0x7) && (pos_transp_table[hash].upperDepth + pos_transp_table[hash].lowerDepth>=2*depth ))&&(rand() < RAND_MAX/2))
+		return;
+
+	pos_transp_table[hash].zobrist_key = key;
+	pos_transp_table[hash].upperBound = upperBound;
+	pos_transp_table[hash].lowerBound = lowerBound;
+	pos_transp_table[hash].upperDepth = depth;
+	pos_transp_table[hash].lowerDepth = depth;
+
+	pos_transp_table[hash].type = 0x7;
+
+}
+
+
+void saveUpper(Position* aPos, int upperBound,  char depth){
+	unsigned long key = zobrist_hash(aPos);
+	unsigned int hash = hahsCode(key);
+	int i=0;
+	saves++;
+	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
 		i++;
 		hash++;
 
-		//wrap arround table
+		//wrap around the table
 		hash = hash % TABLE_SIZE;
 	}
+	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
+		overWrite++;
 
-	//check if we have to overwrite...
-	if(hashTable[hash].flag != NONE){
-		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
+	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key == key)) //already the correct position, then just update
+	{
+		
+		if(((pos_transp_table[hash].type & 0x4) && (pos_transp_table[hash].upperDepth >= depth))&&(rand() > RAND_MAX/2))
 			return;
-		//overwrite
-		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
-			overwrites++;
-		}
 
 	}
+	
+	pos_transp_table[hash].zobrist_key = key;
+	pos_transp_table[hash].upperBound = upperBound;
+	pos_transp_table[hash].upperDepth = depth;
+	//pos_transp_table[hash].lowerDepth = INT_MIN;
+	pos_transp_table[hash].type = 0x5;
 
-	hashTable[hash].zobrist = key;
-	hashTable[hash].upperBound = upperBound;
-	hashTable[hash].lowerBound = lowerBound;
-	hashTable[hash].depth = depth;
-	hashTable[hash].flag = EXACT;
-	
-	
 }
+void saveLower(Position* aPos, int lowerBound, char depth){
+	unsigned long key = zobrist_hash(aPos);
+	unsigned int hash = hahsCode(key);
+	saves++;
+	int i = 0;
 
-void saveUpper(Position* pos, int upperBound, int depth){
-	uint64_t key = zobrist_hash(pos);
-
-	unsigned int hash = hashCode(key);
-
-	
-
-	int i=0;
-
-	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
 		i++;
 		hash++;
-
-		//wrap arround table
+		//wrap around the table
 		hash = hash % TABLE_SIZE;
 	}
+	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
+		overWrite++;
 
-	//check if we have to overwrite...
-	if(hashTable[hash].flag != NONE){
-		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
+	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key == key)) //already the correct position, then just update
+	{
+		if((pos_transp_table[hash].type & 0x2) && (pos_transp_table[hash].lowerDepth >= depth)&&(rand() > RAND_MAX/2))
 			return;
-		//overwrite
-		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
-			overwrites++;
-		}
 
 	}
 
-	hashTable[hash].zobrist = key;
-	hashTable[hash].upperBound = upperBound;
-	hashTable[hash].lowerBound = -1;
-	hashTable[hash].depth = depth;
-	hashTable[hash].flag = UPPER_BOUND;
 	
-	
+	pos_transp_table[hash].zobrist_key = key;
+	pos_transp_table[hash].lowerBound = lowerBound;
+	pos_transp_table[hash].lowerDepth = depth;
+	//pos_transp_table[hash].upperDepth = INT_MIN;
+	pos_transp_table[hash].type = 0x3;
+
 }
+PosTransp* retrieve(Position* aPosition){
 
+	unsigned long zobrist = zobrist_hash(aPosition);
+	unsigned int hash = hahsCode(zobrist);
 
-void saveLower(Position* pos, int lowerBound, int depth){
-	uint64_t key = zobrist_hash(pos);
+	int i =0;
+	read_tries++;
+	while((pos_transp_table[hash].type & 0x1)&&(i < OPEN_ADDRESSING)){
 
-	unsigned int hash = hashCode(key);
-
-	
-
-	int i=0;
-
-	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
+		if((pos_transp_table[hash].zobrist_key == zobrist)){
+			return &pos_transp_table[hash];
+		}
 		i++;
 		hash++;
 
-		//wrap arround table
+		//wrap around the table
 		hash = hash % TABLE_SIZE;
-	}
-
-	//check if we have to overwrite...
-	if(hashTable[hash].flag != NONE){
-		if(abs(hashTable[hash].depth) - abs(depth) >= 2)
-			return;
-		//overwrite
-		if(abs(depth) - abs(hashTable[hash].depth)  >= 2){
-			overwrites++;
-		}
 
 	}
-
-	hashTable[hash].zobrist = key;
-	hashTable[hash].upperBound = -1;
-	hashTable[hash].lowerBound = lowerBound;
-	hashTable[hash].depth = depth;
-	hashTable[hash].flag = LOWER_BOUND;
-	
-	
-}
-
-
-HashEntry* retrieve(Position* pos){
-
-	uint64_t zobrist_key = zobrist_hash(pos);
-	unsigned int hash = hashCode(zobrist_key);
-
-	int i=0;
-
-	while(hashTable[hash].flag != NONE && i < OPEN_ADDRESSING){
-
-		//we have saved this position
-		if(hashTable[hash].zobrist == zobrist_key)
-			return &hashTable[hash];
-		i++;
-		hash++;
-
-		//wrap arround table
-		hash = hash % TABLE_SIZE;
-	}
-
 	return NULL;
 
 
+}
 
+void freeTable(){
+	free(pos_transp_table);
 }

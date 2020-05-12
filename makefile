@@ -3,7 +3,7 @@ all: client server guiServer
 guiServer: board comm gameServer guiServer.h global.h
 	gcc -o guiServer guiServer.c board.o comm.o gameServer.o -O3 `pkg-config --libs --cflags gtk+-2.0`
 
-client: client.c board comm list transpositionTable global.h client.h
+client: client.c board comm list transpositionTable global.h 
 	gcc -g3 -o client client.c board.o comm.o list.o transpositionTable.o -O3
 
 server: server.c board comm gameServer global.h
