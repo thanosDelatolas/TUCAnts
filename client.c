@@ -13,7 +13,7 @@
 
 #include <sys/time.h>
 
-#define MAX_DEPTH 20
+#define MAX_DEPTH 12
 #define INFINITY 999999999
 
 #define MAX_TIME 7
@@ -161,8 +161,9 @@ Move* make_move(Position* pos){
 	Position* tempPosition = malloc(sizeof(Position));
 	memcpy(tempPosition, pos, sizeof(Position));
 
-	//alpha_beta(tempPosition, 9, -INFINITY, INFINITY, 1, agent_move);
-	iterativeDeepening(tempPosition, agent_move);
+	alpha_beta(tempPosition, 11, -INFINITY, INFINITY, 1, agent_move);
+	//MTDF(tempPosition, evaluate_function(pos), 10, agent_move);
+	//iterativeDeepening(tempPosition, agent_move);
 	
 	free(tempPosition);
 	
@@ -363,10 +364,9 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 	int f = evaluate_function(pos);
 
 
-	char d=5;
+	char d=8;
 	clock_t start_clock = clock();
-	while(1)
-	{
+	while(1){
 		f = MTDF(pos, f, d, agent_move);
 		//give max 7 seconds to find best move
 		if(((clock() - start_clock)/CLOCKS_PER_SEC > MAX_TIME) || (d > MAX_DEPTH)){
@@ -375,7 +375,7 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 			printf("Depth of iteration: %d\n", d);
 			break;
 		}
-		d +=1;
+		d++;
 
 	}
 	printf("Time used: %ld\n", (clock() - start_clock)/CLOCKS_PER_SEC);
