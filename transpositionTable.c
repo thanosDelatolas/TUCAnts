@@ -22,15 +22,8 @@ void init_hash_table(){
 }
 
 void init_zobrist(){
-		hitsUpper =0;
-		hitsLower = 0;
-		read_tries = 1;
-		overWrite = 0;
-		saves=1;
-
 	//generate random bit streams
 	for (int i=0; i < BOARD_COLUMNS*BOARD_ROWS; i++){
-
 		zobrist_table[i][0] = ((((long) rand() <<  0) & 0x00000000FFFFFFFFull) | (((long) rand() << 32) & 0xFFFFFFFF00000000ull));
 		zobrist_table[i][1] = ((((long) rand() <<  0) & 0x00000000FFFFFFFFull) | (((long) rand() << 32) & 0xFFFFFFFF00000000ull));
 	}
@@ -60,8 +53,6 @@ unsigned int hahsCode(long zobrist){
 void saveExact(Position* aPos, int upperBound, int lowerBound, char depth){
 	unsigned long key = zobrist_hash(aPos);
 	unsigned int hash = hahsCode(key);
-	saves++;
-
 	int i=0;
 
 	//if it is not empty
@@ -72,8 +63,6 @@ void saveExact(Position* aPos, int upperBound, int lowerBound, char depth){
 			//wrap around the table
 			hash = hash % TABLE_SIZE;
 	}
-	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
-		overWrite++;
 
 	if(((pos_transp_table[hash].type = 0x7) && (pos_transp_table[hash].upperDepth + pos_transp_table[hash].lowerDepth>=2*depth ))&&(rand() < RAND_MAX/2))
 		return;
@@ -93,7 +82,7 @@ void saveUpper(Position* aPos, int upperBound,  char depth){
 	unsigned long key = zobrist_hash(aPos);
 	unsigned int hash = hahsCode(key);
 	int i=0;
-	saves++;
+	
 
 	//if it is not empty
 	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
@@ -103,8 +92,6 @@ void saveUpper(Position* aPos, int upperBound,  char depth){
 		//wrap around the table
 		hash = hash % TABLE_SIZE;
 	}
-	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
-		overWrite++;
 
 	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key == key)) //already the correct position, then just update
 	{
@@ -124,7 +111,7 @@ void saveUpper(Position* aPos, int upperBound,  char depth){
 void saveLower(Position* aPos, int lowerBound, char depth){
 	unsigned long key = zobrist_hash(aPos);
 	unsigned int hash = hahsCode(key);
-	saves++;
+	
 	int i = 0;
 
 	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
@@ -133,9 +120,7 @@ void saveLower(Position* aPos, int lowerBound, char depth){
 		//wrap around the table
 		hash = hash % TABLE_SIZE;
 	}
-	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key))
-		overWrite++;
-
+	
 	if((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key == key)) //already the correct position, then just update
 	{
 		if((pos_transp_table[hash].type & 0x2) && (pos_transp_table[hash].lowerDepth >= depth)&&(rand() > RAND_MAX/2))
@@ -157,7 +142,6 @@ PosTransp* retrieve(Position* aPosition){
 	unsigned int hash = hahsCode(zobrist);
 
 	int i =0;
-	read_tries++;
 	while((pos_transp_table[hash].type & 0x1)&&(i < OPEN_ADDRESSING)){
 
 		if((pos_transp_table[hash].zobrist_key == zobrist)){

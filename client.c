@@ -13,7 +13,7 @@
 
 #include <sys/time.h>
 
-#define MAX_DEPTH 12
+#define MAX_DEPTH 11
 #define INFINITY 999999999
 
 #define MAX_TIME 7
@@ -246,7 +246,6 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 		//if not upper		
 		if((pos_transp -> type & 0x2) && (pos_transp->lowerBound >= beta)){
 			if(pos_transp -> lowerDepth >= depth){
-				hitsLower++;
 				return pos_transp -> lowerBound;
 			}
 		}
@@ -260,7 +259,6 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 		//if not lower			
 		if((pos_transp -> type & 0x4) && (pos_transp -> upperBound <= alpha)){
 			if(pos_transp -> upperDepth >= depth){
-				hitsUpper++;
 				return pos_transp -> upperBound;
 			}
 		}
@@ -364,15 +362,12 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 	int f = evaluate_function(pos);
 
 
-	char d=8;
+	char d=5;
 	clock_t start_clock = clock();
 	while(1){
 		f = MTDF(pos, f, d, agent_move);
 		//give max 7 seconds to find best move
-		if(((clock() - start_clock)/CLOCKS_PER_SEC > MAX_TIME) || (d > MAX_DEPTH)){
-			printf("Max Score: %d\n", f);
-			printf("Time used: %ld\n", (clock() - start_clock)/CLOCKS_PER_SEC);
-			printf("Depth of iteration: %d\n", d);
+		if(((clock() - start_clock)/CLOCKS_PER_SEC > MAX_TIME) || (d > MAX_DEPTH)){			
 			break;
 		}
 		d++;
@@ -380,6 +375,7 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 	}
 	printf("Time used: %ld\n", (clock() - start_clock)/CLOCKS_PER_SEC);
 	printf("Best Move: %d\n", f);
+	printf("Depth of iteration: %d\n", d);
 
 	return f;
 }

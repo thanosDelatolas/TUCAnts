@@ -50,14 +50,6 @@ typedef struct {
 	char type; //determines if it's exact,upper,lower
 }PosTransp;
 
-
-
-int hitsUpper;
-int hitsLower;
-int read_tries;
-int overWrite;
-int saves;
-
 PosTransp* pos_transp_table;
 
 
