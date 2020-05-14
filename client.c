@@ -161,16 +161,16 @@ Move* make_move(Position* pos){
 	Position* tempPosition = malloc(sizeof(Position));
 	memcpy(tempPosition, pos, sizeof(Position));
 
-	alpha_beta(tempPosition, 11, -INFINITY, INFINITY, 1, agent_move);
+	//alpha_beta(tempPosition, 10, -INFINITY, INFINITY, 1, agent_move);
 	//MTDF(tempPosition, evaluate_function(pos), 10, agent_move);
-	//iterativeDeepening(tempPosition, agent_move);
+	iterativeDeepening(tempPosition, agent_move);
 	
 	free(tempPosition);
 	
 	return agent_move;
 }
 
-/****white player wants to minimaze and black player wants to maximaze
+/*
 *
 * gain 100 points for each ant that you own
 * gain points for the depth (in board ) of each ant 
