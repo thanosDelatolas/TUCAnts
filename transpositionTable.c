@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define MIN(x,y) (((x) < (y)) ? (x) : (y))
 
 void init_hash_table(){
 

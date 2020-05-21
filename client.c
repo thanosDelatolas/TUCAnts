@@ -13,7 +13,7 @@
 
 #include <sys/time.h>
 
-#define MAX_DEPTH 11
+#define MAX_DEPTH 10
 #define INFINITY 999999999
 
 #define MAX_TIME 7
@@ -193,7 +193,6 @@ int evaluate_function (Position *pos) {
            		else
            			heuristic += (BOARD_ROWS-i-1);
 
-
            	}
             else if (pos->board[i][j] == getOtherSide(myColor)){
            		heuristic -= 100;
@@ -220,17 +219,17 @@ int evaluate_function (Position *pos) {
 * evaluate_function works better because none of the ants is threatened!
 */
 int quiescence_search(Position* pos){
-		int i, j;
-		for( i = 0; i < BOARD_ROWS; i++ ){
-			for( j = 0; j < BOARD_COLUMNS; j++ ){
-				if( pos->board[ i ][ j ] == pos->turn ){
-					if( canJump( i, j, pos->turn, pos ) ){
-						return TRUE;
-					}
+	int i, j;
+	for( i = 0; i < BOARD_ROWS; i++ ){
+		for( j = 0; j < BOARD_COLUMNS; j++ ){
+			if( pos->board[ i ][ j ] == pos->turn ){
+				if( canJump( i, j, pos->turn, pos ) ){
+					return TRUE;
 				}
 			}
 		}
-		return FALSE;
+	}
+	return FALSE;
 }
 /*
 * alpha_beta with memory!
@@ -314,7 +313,7 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 				g = tempScore;
 				if(finalMove != NULL){
 					
-					memcpy(finalMove, child, sizeof(Move));
+					memcpy(finalMove, chilpopd, sizeof(Move));
 				}
 			}
 			a = max(a, g);
@@ -365,7 +364,7 @@ int iterativeDeepening(Position* pos, Move* agent_move){
 	char d=5;
 	clock_t start_clock = clock();
 	while(1){
-		f = MTDF(pos, f, d, agent_move);
+		f = MTDF(pos, f, d,OPEN_ADDRESSING agent_move);
 		//give max 7 seconds to find best move
 		if(((clock() - start_clock)/CLOCKS_PER_SEC > MAX_TIME) || (d > MAX_DEPTH)){			
 			break;
@@ -460,7 +459,7 @@ void follow_jump(list* moveList, Move* move, int rec_depth /* depth of recursion
 
 list* find_moves(Position *pos) {
 	int i, j, jumpPossible = FALSE, movePossible = FALSE, playerDirection;
-	list* moveList = malloc(sizeof(list));
+	list* moveList = (list*) malloc(sizeof(list));
 
 	initList(moveList);
 	Move *move;
@@ -489,7 +488,7 @@ list* find_moves(Position *pos) {
 
 					//left move
 					if(movePossible % 2 == 1){ 
-						move = malloc(sizeof(Move));
+						move = (Move*)malloc(sizeof(Move));
 						move->color = pos->turn;
 						move->tile[0][0] = i;
 						move->tile[1][0] = j;

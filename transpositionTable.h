@@ -1,7 +1,7 @@
 #include "board.h"
 #include "move.h"
 
-#define TABLE_SIZE 87000000
+#define TABLE_SIZE 87654321
 #define OPEN_ADDRESSING 1000
 
 
@@ -38,7 +38,7 @@ unsigned long zobrist_hash(Position *);
 *
 *
 * we don't use enum to save space and time!
-* bitwise checks are way faster!
+* bitwise checks are way faster! (at first we had enum but we exemplified from zobrist!)
 */
 
 typedef struct {

@@ -1,4 +1,5 @@
 #include "list.h"
+
 /** Implemented technics:
 *
 * minimax
