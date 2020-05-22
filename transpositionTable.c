@@ -6,7 +6,8 @@
 
 
 void init_hash_table(){
-
+	
+	init_zobrist();
 	pos_transp_table = malloc(sizeof(PosTransp)*(TABLE_SIZE));
 
 	if(pos_transp_table == NULL){

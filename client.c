@@ -77,7 +77,7 @@ int main( int argc, char ** argv )
 
 
 	connectToTarget( port, ip, &mySocket );
-	init_zobrist();
+	
 	init_hash_table();
 
 	char msg;
