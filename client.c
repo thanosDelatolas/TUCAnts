@@ -77,7 +77,6 @@ int main( int argc, char ** argv )
 
 
 	connectToTarget( port, ip, &mySocket );
-	
 	init_hash_table();
 
 	char msg;
@@ -114,6 +113,13 @@ int main( int argc, char ** argv )
 				printf("My color is %d\n",myColor);
 				break;
 
+			case NM_PREPARE_TO_RECEIVE_MOVE:	//server informs us that he will send opponent's move
+				getMove( &moveReceived, mySocket );
+				moveReceived.color = getOtherSide( myColor );
+				doMove( &gamePosition, &moveReceived );		//play opponent's move on our position
+				printPosition( &gamePosition );
+				break;
+
 			case NM_REQUEST_MOVE:		//server requests our move
 				myMove.color = myColor;
 
@@ -138,9 +144,6 @@ int main( int argc, char ** argv )
 
 			case NM_QUIT:			//server wants us to quit...we shall obey
 				close( mySocket );
-				return 0;
-			default:
-				printf("Wrong Signal!\n");
 				return 0;
 		}
 
