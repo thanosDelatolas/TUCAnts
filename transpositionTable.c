@@ -14,7 +14,7 @@ void init_hash_table(){
 		printf("Please reduce TABLE_SIZE in transpositionTable.h\n");
 		exit(0);
 	}
-	printf("Reserved : %f bytes\n",(sizeof(PosTransp)*(TABLE_SIZE))/1000000000);
+	printf("Reserved : %ld bytes\n",(sizeof(PosTransp)*(TABLE_SIZE)));
 	printf("The agent will free this space when you close him!\n");
 
 	//all empty
