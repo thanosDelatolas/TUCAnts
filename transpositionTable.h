@@ -1,7 +1,7 @@
 #include "board.h"
 #include "move.h"
 
-#define TABLE_SIZE 87654321
+#define TABLE_SIZE 82000000
 #define OPEN_ADDRESSING 1000
 
 

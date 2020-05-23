@@ -273,10 +273,8 @@ int alpha_beta(Position *pos, char depth, int alpha, int beta, char maximizingPl
 	}
 	
 
-	if (depth <= 0){ //if we reached the maximum depth of our recursion
-		if(!quiescence_search(pos)){ // and there are no captures
-			return evaluate_function(pos); //return heuristic
-		}
+	if (depth <= 0 && !quiescence_search(pos)){ //if we reached the maximum depth of our recursion and there are no captures
+		return evaluate_function(pos); //return heuristic
 		
 	}
 

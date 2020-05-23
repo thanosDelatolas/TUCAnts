@@ -8,12 +8,14 @@
 void init_hash_table(){
 	
 	init_zobrist();
-	pos_transp_table = malloc(sizeof(PosTransp)*(TABLE_SIZE));
+	pos_transp_table = (PosTransp*)malloc(sizeof(PosTransp)*(TABLE_SIZE));
 
 	if(pos_transp_table == NULL){
 		printf("Please reduce TABLE_SIZE in transpositionTable.h\n");
 		exit(0);
 	}
+	printf("Reserved : %f bytes\n",(sizeof(PosTransp)*(TABLE_SIZE))/1000000000);
+	printf("The agent will free this space when you close him!\n");
 
 	//all empty
 	for(int i=0; i < TABLE_SIZE; i++)
@@ -115,7 +117,7 @@ void saveLower(Position* aPos, int lowerBound, char depth){
 	int i = 0;
 
 	while ((pos_transp_table[hash].type & 0x1)&&(pos_transp_table[hash].zobrist_key != key)&&(i<OPEN_ADDRESSING)){
-		i++;
+		i++; 
 		hash++;
 		//wrap around the table
 		hash = hash % TABLE_SIZE;
