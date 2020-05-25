@@ -48,7 +48,7 @@ unsigned long zobrist_hash(Position* pos){
 }
 
 
-unsigned int hahsCode(long zobrist){
+unsigned int hahsCode(unsigned long zobrist){
 	return  zobrist % TABLE_SIZE;
 }
 

@@ -59,7 +59,7 @@ void saveUpper(Position*, int, char);
 
 PosTransp* retrieve(Position*);
 
-unsigned int hashCode(long);
+unsigned int hashCode(unsigned long);
 void init_hash_table();
 void freeTable();
 
